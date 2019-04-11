@@ -115,7 +115,7 @@ def categorize(master, key_arr, duplicates, unique)
    # These are thresholds that were set by looking at the test data
    # This can be set dynamically based on whoever is manually checking these duplicate candidates
    if ls < 5 || sim > 0.85 || meta_sim > 0.85
-     duplicates << {'reason'=> "Leven: #{ls}, White: #{sim}", 'data'=>[uc[idx1], uc[idx2]]}
+     duplicates << {'reason'=> "Levenshtein: #{ls}, Sim: #{sim}, Sim on Metaphone: #{meta_sim}", 'data'=>[uc[idx1], uc[idx2]]}
 
      # Remove these entries later 
      to_remove << key1
