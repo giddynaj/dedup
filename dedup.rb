@@ -1,5 +1,4 @@
 require 'csv'
-require 'pry'
 require 'text'
 require 'json'
 require 'sinatra'
@@ -14,14 +13,18 @@ require 'sinatra/json'
 #
 
 def clean(hline)
+  
   #Clean First and Last Name
   for key in ['first_name','last_name']
     hline[key] = hline[key].downcase.strip
   end
+
 end
 
 def gen_key(keys, line_to_insert)
+
   full_key = []
+  # Take the initialization arr keys and build the key from it
   for key in keys
     full_key << line_to_insert[key]
   end
@@ -29,20 +32,31 @@ def gen_key(keys, line_to_insert)
 end
 
 def add_to(master, keys, line_to_insert)
+  #generate hash key
   full_key = gen_key(keys, line_to_insert)
+
+  #initialize hash slot with an empty array
   master[full_key] = [] if master[full_key].nil?
+  
+  #append the hash 
   master[full_key] << line_to_insert 
+
   master
 end
 
 def load_file(filename, master, key_arr)
+  #initialize variables
   hash_line = {}
   clean_hash_line = {}
 
   #Set headers so line can be converted into hash
   CSV.foreach(filename, headers: true) do |line|
     hash_line = line.to_h
+
+    #clean hash line
     clean_hash_line = clean(hash_line)
+  
+    #add hash_line to master
     master = add_to(master, key_arr, hash_line) 
   end
   master
@@ -50,7 +64,7 @@ end
 
 
 #
-#Categorize
+# Categorize
 #
 # First sort out the entries into unique candidates
 # and duplicates based on keys
@@ -68,8 +82,13 @@ def categorize(master, key_arr, duplicates, unique)
   #
   for key in master.keys
     if master[key].count > 1
+
+      # Because there is more than one entry
+      # Append specific reason for tagging this data as a duplicate
       duplicates << {'reason'=> "Duplicate key #{key}", 'data' => master[key] }
     else
+
+      # Since there is only one entry we will add to the candidates
       unique_candidates << master[key][0]
     end
   end
@@ -82,14 +101,23 @@ def categorize(master, key_arr, duplicates, unique)
     key2 = gen_key(key_arr, uc[idx2])
     
    ls =  Text::Levenshtein.distance(key1, key2) 
-   meta = Text::Metaphone.metaphone(key1)
+   white = Text::WhiteSimilarity.new
+   meta1 = Text::Metaphone.metaphone(key1)
+   meta2 = Text::Metaphone.metaphone(key2)
+   meta_sim = white.similarity(meta1, meta2)
+   sim = white.similarity(key1, key2)
+
+   #TODO
    #puts Text::Metaphone.metaphone(uc[key2])
    #puts Text::Soundex.soundex(uc[key1])
    #puts Text::PorterStemming.stem(can['last_name'])
-   white = Text::WhiteSimilarity.new
-   sim = white.similarity(key1, key2)
-   if ls < 5 || sim > 0.85
+
+   # These are thresholds that were set by looking at the test data
+   # This can be set dynamically based on whoever is manually checking these duplicate candidates
+   if ls < 5 || sim > 0.85 || meta_sim > 0.85
      duplicates << {'reason'=> "Leven: #{ls}, White: #{sim}", 'data'=>[uc[idx1], uc[idx2]]}
+
+     # Remove these entries later 
      to_remove << key1
      to_remove << key2
    end
@@ -105,8 +133,8 @@ def categorize(master, key_arr, duplicates, unique)
   # Assign unique people to list
   unique = unique_candidates
   
-#Sort
-unique = unique.sort {|s1, s2| s1['last_name']<=>s2['last_name']}
+  #Optional sort on last name 
+  unique = unique.sort {|s1, s2| s1['last_name']<=>s2['last_name']}
 
   [duplicates, unique]
 end
@@ -154,6 +182,8 @@ get '/results' do
 end
 
 get '/' do
+# Setting up some styles and async js call function on the home page
+# This will call the results page when the dom is loaded.
 <<-EOS  
   <style>
   .unique {
