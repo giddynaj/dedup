@@ -94,12 +94,23 @@ def categorize(master, key_arr, duplicates, unique)
   end
 
   # Expensive here n-prime^2
+  # It seems necessary in order to compare with
+  # all other elements in the unique candidates list.
+  #
   uc = unique_candidates
   for idx1 in (0...uc.count).to_a
     for idx2 in ((idx1+1)...uc.count).to_a
+
+    #Generate the index keys for the elements
+    #to be compared
     key1 = gen_key(key_arr, uc[idx1])
     key2 = gen_key(key_arr, uc[idx2])
     
+   #Doing straight up computation, but we can
+   #chain it. Example: if meta_sim > 0.95 then run 
+   #levenshtein. If levenshtein is <= 2 then run
+   #WhiteSimilarity. You would want the less accurate
+   #algorithms to run first, this I'm not sure of
    ls =  Text::Levenshtein.distance(key1, key2) 
    white = Text::WhiteSimilarity.new
    meta1 = Text::Metaphone.metaphone(key1)
