@@ -1,12 +1,16 @@
 # dedup
 Dedup Challenge
 
-Install Dependencies
+## Install Dependencies
+```
+#text 1.3.1
 gem install text
-gem install sinatra
-gem install sinatra-contrib
 
 #sinatra 2.0.5
+gem install sinatra
+
 #sinatra-contrib 2.0.5
-#text 1.3.1
+gem install sinatra-contrib
+```
+
 
